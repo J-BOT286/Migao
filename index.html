@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f8f4" />
+  <title>这不得瘦死 · 轻盈手帐</title>
+  <style>
+    :root {
+      --ink: #202b27;
+      --muted: #8b9891;
+      --line: #e9eee9;
+      --paper: #f7f8f4;
+      --card: #ffffff;
+      --green: #63b89b;
+      --deep-green: #398a6c;
+      --mint: #e5f4ec;
+      --orange: #f5ad62;
+      --peach: #fff0dc;
+      --pink: #ee9eaa;
+      --lavender: #a99ed8;
+      --shadow: 0 10px 30px rgba(39, 69, 55, .06);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #eaf0eb;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; border: 0; }
+    .app-shell { width: min(100%, 460px); min-height: 100vh; margin: 0 auto; background: var(--paper); position: relative; overflow: hidden; }
+    .statusbar { height: 28px; padding: 9px 20px 0; display: flex; justify-content: space-between; color: #4e5a54; font-size: 11px; font-weight: 700; }
+    .status-icons { display: flex; gap: 8px; align-items: center; }
+    .status-icons span { display: inline-block; }
+    .signal { width: 12px; height: 9px; border-bottom: 2px solid #4e5a54; border-left: 2px solid transparent; border-right: 2px solid transparent; position: relative; }
+    .signal:after { content: ""; position: absolute; inset: 2px 2px 0; border-bottom: 2px solid #4e5a54; }
+    .wifi { width: 13px; height: 10px; border: 2px solid #4e5a54; border-top-color: transparent; border-left-color: transparent; transform: rotate(45deg); border-radius: 3px; }
+    .battery { width: 18px; height: 9px; border: 1.5px solid #4e5a54; border-radius: 3px; position: relative; }
+    .battery:before { content: ""; position: absolute; width: 12px; height: 5px; left: 2px; top: 1px; border-radius: 1px; background: #4e5a54; }
+    .battery:after { content: ""; position: absolute; width: 2px; height: 4px; right: -4px; top: 1px; border-radius: 0 2px 2px 0; background: #4e5a54; }
+    header { padding: 11px 20px 15px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-mark { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: var(--mint); color: var(--deep-green); font-size: 20px; transform: rotate(-5deg); box-shadow: inset 0 -2px 0 rgba(57,138,108,.08); }
+    .brand h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: .2px; }
+    .brand small { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .header-actions { display: flex; gap: 9px; }
+    .icon-btn { width: 34px; height: 34px; display: grid; place-items: center; color: #56655d; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 3px 10px rgba(39,69,55,.03); }
+    .icon-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    main { padding: 0 16px 102px; }
+    .hero-card { position: relative; min-height: 214px; padding: 18px 18px 15px; border-radius: 24px; overflow: hidden; background: linear-gradient(135deg, #dff2e9 0%, #eef8ef 64%, #fff4df 100%); box-shadow: var(--shadow); }
+    .hero-card:after { content: ""; width: 162px; height: 162px; border: 1px solid rgba(57,138,108,.12); border-radius: 50%; position: absolute; right: -30px; top: -31px; }
+    .hero-top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1; }
+    .eyebrow { margin: 0 0 5px; color: var(--deep-green); font-size: 12px; font-weight: 700; }
+    .hero-title { margin: 0; font-size: 23px; line-height: 1.3; font-weight: 800; }
+    .hero-date { color: #82978b; font-size: 11px; }
+    .weight-row { display: flex; align-items: baseline; gap: 6px; margin: 20px 0 12px; position: relative; z-index: 1; }
+    .weight { font-size: 46px; line-height: .95; font-weight: 800; letter-spacing: -1px; }
+    .unit { color: #648074; font-size: 15px; }
+    .down { margin-left: auto; padding: 6px 9px; border-radius: 9px; color: var(--deep-green); background: rgba(255,255,255,.64); font-size: 11px; font-weight: 700; }
+    .progress-track { height: 8px; border-radius: 99px; background: rgba(255,255,255,.74); overflow: hidden; }
+    .progress-value { width: 63%; height: 100%; border-radius: inherit; background: var(--green); }
+    .progress-meta { display: flex; justify-content: space-between; margin-top: 7px; color: #72887d; font-size: 10px; }
+    .motivation { position: absolute; right: 18px; bottom: 14px; color: #638474; font-size: 11px; font-weight: 700; }
+    .section-head { display: flex; justify-content: space-between; align-items: center; margin: 23px 3px 12px; }
+    .section-head h2 { margin: 0; font-size: 17px; font-weight: 800; }
+    .section-head button { padding: 0; color: var(--deep-green); background: transparent; font-size: 12px; font-weight: 700; }
+    .section-head button:after { content: "  ›"; font-size: 15px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .stat-card { min-height: 113px; padding: 13px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 17px; box-shadow: var(--shadow); }
+    .stat-icon { width: 30px; height: 30px; display: grid; place-items: center; margin-bottom: 9px; border-radius: 10px; font-size: 15px; }
+    .stat-icon.orange { background: var(--peach); }
+    .stat-icon.blue { background: #e1f0f5; }
+    .stat-icon.pink { background: #fbe7ea; }
+    .stat-label { color: var(--muted); font-size: 11px; }
+    .stat-value { margin-top: 3px; font-size: 18px; font-weight: 800; }
+    .stat-value span { margin-left: 2px; color: var(--muted); font-size: 10px; font-weight: 500; }
+    .stat-tip { margin-top: 4px; color: #9ba8a2; font-size: 9px; }
+    .ring-card { display: flex; align-items: center; gap: 17px; padding: 15px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 19px; box-shadow: var(--shadow); }
+    .ring { width: 95px; height: 95px; flex: 0 0 95px; position: relative; display: grid; place-items: center; }
+    .ring svg { width: 95px; height: 95px; transform: rotate(-90deg); }
+    .ring circle { fill: none; stroke-width: 9; }
+    .ring .bg { stroke: #edf2ee; }
+    .ring .fg { stroke: var(--green); stroke-linecap: round; stroke-dasharray: 213 301; }
+    .ring-content { position: absolute; text-align: center; }
+    .ring-content strong { display: block; font-size: 20px; line-height: 1.1; }
+    .ring-content span { color: var(--muted); font-size: 10px; }
+    .ring-copy { min-width: 0; }
+    .ring-copy h3 { margin: 0 0 4px; font-size: 15px; }
+    .ring-copy p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .ring-copy b { color: var(--deep-green); }
+    .quick-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+    .quick-btn { min-height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; color: #54645c; font-size: 11px; box-shadow: var(--shadow); transition: transform .16s, background .16s; }
+    .quick-btn:active { transform: scale(.96); background: #f1f8f3; }
+    .quick-emoji { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; font-size: 16px; }
+    .quick-emoji.meal { background: #fff0dc; }
+    .quick-emoji.water { background: #e1f0f5; }
+    .quick-emoji.sport { background: #e7f3e6; }
+    .quick-emoji.scale { background: #f4eafa; }
+    .log-list { display: flex; flex-direction: column; gap: 10px; }
+    .log-item { display: flex; align-items: center; gap: 11px; padding: 12px 13px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+    .log-dot { width: 35px; height: 35px; display: grid; place-items: center; flex: 0 0 35px; border-radius: 12px; font-size: 16px; }
+    .log-dot.food { background: #fff0dc; }
+    .log-dot.water { background: #e1f0f5; }
+    .log-dot.walk { background: #e8f3e8; }
+    .log-copy { flex: 1; min-width: 0; }
+    .log-copy strong { display: block; font-size: 13px; }
+    .log-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .log-cal { color: #81958a; font-size: 11px; font-weight: 700; }
+    .bottom-nav { position: fixed; left: 50%; bottom: 0; width: min(100%, 460px); transform: translateX(-50%); display: grid; grid-template-columns: repeat(4, 1fr); padding: 9px 12px calc(9px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.96); border-top: 1px solid var(--line); box-shadow: 0 -8px 25px rgba(39,69,55,.06); z-index: 10; }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; color: #a0aaa4; background: transparent; font-size: 10px; }
+    .nav-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-btn.active { color: var(--deep-green); font-weight: 700; }
+    .nav-btn.active .nav-icon-wrap { background: var(--mint); }
+    .nav-icon-wrap { width: 31px; height: 25px; display: grid; place-items: center; border-radius: 10px; }
+    .toast { position: fixed; left: 50%; bottom: 89px; transform: translate(-50%, 15px); padding: 10px 15px; color: #fff; background: rgba(32,43,39,.88); border-radius: 12px; font-size: 12px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 20; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .modal-backdrop { position: fixed; inset: 0; display: none; align-items: flex-end; justify-content: center; background: rgba(24,37,30,.25); z-index: 30; }
+    .modal-backdrop.show { display: flex; }
+    .modal { width: min(100%, 460px); padding: 18px 18px calc(20px + env(safe-area-inset-bottom)); background: var(--paper); border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(39,69,55,.15); }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .modal-head h3 { margin: 0; font-size: 17px; }
+    .close-btn { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; background: #edf2ee; color: #718079; font-size: 18px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 11px; }
+    .field input, .field select { width: 100%; padding: 11px 12px; border: 1px solid #dfe8e1; border-radius: 12px; outline: 0; color: var(--ink); background: #fff; }
+    .submit-btn { width: 100%; padding: 12px; color: white; background: var(--deep-green); border-radius: 13px; font-size: 13px; font-weight: 700; }
+    @media (min-width: 461px) { .app-shell { min-height: 850px; } .bottom-nav { position: absolute; } }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="statusbar"><span>9:41</span><div class="status-icons"><span>▮▮▮</span><span class="wifi"></span><span class="battery"></span></div></div>
+    <header>
+      <div class="brand"><div class="brand-mark">✦</div><div><h1>这不得瘦死</h1><small>轻盈生活，从今天开始</small></div></div>
+      <div class="header-actions"><button class="icon-btn" aria-label="查看提醒" data-action="notify"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></button><button class="icon-btn" aria-label="个人资料" data-action="profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c.7-3.4 3.1-5.2 7-5.2s6.3 1.8 7 5.2"/></svg></button></div>
+    </header>
+    <main>
+      <section class="hero-card">
+        <div class="hero-top"><div><p class="eyebrow">星期三 · 8月12日</p><h2 class="hero-title">今天也要稳稳变轻</h2></div><span class="hero-date">第 18 天</span></div>
+        <div class="weight-row"><strong class="weight" id="weightValue">58.6</strong><span class="unit">kg</span><span class="down">已减 3.4 kg</span></div>
+        <div class="progress-track"><div class="progress-value"></div></div><div class="progress-meta"><span>起始 62.0 kg</span><span>目标 54.0 kg</span></div><div class="motivation">慢慢来，比停在原地好</div>
+      </section>
+
+      <div class="section-head"><h2>今日概览</h2><button data-action="allStats">查看详情</button></div>
+      <section class="stats-grid">
+        <article class="stat-card"><div class="stat-icon orange">🔥</div><div class="stat-label">摄入热量</div><div class="stat-value">1,280 <span>kcal</span></div><div class="stat-tip">目标 1,650 kcal</div></article>
+        <article class="stat-card"><div class="stat-icon blue">💧</div><div class="stat-label">饮水量</div><div class="stat-value" id="waterValue">1,200 <span>ml</span></div><div class="stat-tip">还差 800 ml</div></article>
+        <article class="stat-card"><div class="stat-icon pink">👣</div><div class="stat-label">今日步数</div><div class="stat-value">6,842 <span>步</span></div><div class="stat-tip">目标 10,000 步</div></article>
+      </section>
+
+      <div class="section-head"><h2>热量平衡</h2><button data-action="calorieDetail">趋势</button></div>
+      <section class="ring-card"><div class="ring"><svg viewBox="0 0 110 110" aria-hidden="true"><circle class="bg" cx="55" cy="55" r="48"/><circle class="fg" cx="55" cy="55" r="48"/></svg><div class="ring-content"><strong>78%</strong><span>完成度</span></div></div><div class="ring-copy"><h3>保持这个节奏</h3><p>今日还可以吃 <b>370 kcal</b><br/>别饿着自己，吃点喜欢的也没关系。</p></div></section>
+
+      <div class="section-head"><h2>快速记录</h2></div>
+      <section class="quick-row"><button class="quick-btn" data-modal="meal"><span class="quick-emoji meal">🍱</span>记饮食</button><button class="quick-btn" data-modal="water"><span class="quick-emoji water">💧</span>喝水</button><button class="quick-btn" data-modal="sport"><span class="quick-emoji sport">🏃</span>记运动</button><button class="quick-btn" data-modal="weight"><span class="quick-emoji scale">⚖️</span>记体重</button></section>
+
+      <div class="section-head"><h2>今日动态</h2><button data-action="allLogs">全部记录</button></div>
+      <section class="log-list" id="logList"><article class="log-item"><div class="log-dot food">🥗</div><div class="log-copy"><strong>午餐 · 鸡胸肉沙拉</strong><span>12:18 · 清爽又满足</span></div><div class="log-cal">420 kcal</div></article><article class="log-item"><div class="log-dot water">💧</div><div class="log-copy"><strong>喝了一杯水</strong><span>10:35 · 今日第 4 杯</span></div><div class="log-cal">300 ml</div></article><article class="log-item"><div class="log-dot walk">🚶</div><div class="log-copy"><strong>散步 32 分钟</strong><span>09:10 · 公园慢走</span></div><div class="log-cal">136 kcal</div></article></section>
+    </main>
+    <nav class="bottom-nav"><button class="nav-btn active" data-nav="home"><span class="nav-icon-wrap"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>首页</button><button class="nav-btn" data-nav="diary"><span class="nav-icon-wrap"><svg viewBox="0 0 24 24"><path d="M6 3h12v18H6zM9 7h6M9 11h6M9 15h4"/></svg></span>手帐</button><button class="nav-btn" data-nav="trend"><span class="nav-icon-wrap"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l3-4 3 2 5-6"/></svg></span>趋势</button><button class="nav-btn" data-nav="mine"><span class="nav-icon-wrap"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20c.7-3.4 3.1-5.2 7-5.2s6.3 1.8 7 5.2"/></svg></span>我的</button></nav>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div class="modal-backdrop" id="modalBackdrop"><section class="modal"><div class="modal-head"><h3 id="modalTitle">记录一笔</h3><button class="close-btn" id="closeModal" aria-label="关闭">×</button></div><form id="recordForm"><div class="field" id="nameField"><label id="nameLabel">内容</label><input id="nameInput" required placeholder="例如：鸡胸肉沙拉" /></div><div class="form-row"><div class="field"><label id="amountLabel">热量</label><input id="amountInput" type="number" min="0" required placeholder="420" /></div><div class="field"><label>备注</label><input id="noteInput" placeholder="可选" /></div></div><button class="submit-btn" type="submit">保存记录</button></form></section></div>
+  <script>
+    const toast = document.getElementById('toast');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const nameLabel = document.getElementById('nameLabel');
+    const nameInput = document.getElementById('nameInput');
+    const amountLabel = document.getElementById('amountLabel');
+    const amountInput = document.getElementById('amountInput');
+    const noteInput = document.getElementById('noteInput');
+    const logList = document.getElementById('logList');
+    let activeModal = '';
+    let water = 1200;
+    const configs = {
+      meal: { title: '记一笔饮食', name: '吃了什么', placeholder: '例如：鸡胸肉沙拉', amount: '热量 (kcal)', amountPlaceholder: '420', emoji: '🍱', cls: 'food', unit: 'kcal' },
+      water: { title: '记录饮水', name: '喝了多少', placeholder: '例如：300', amount: '毫升 (ml)', amountPlaceholder: '300', emoji: '💧', cls: 'water', unit: 'ml' },
+      sport: { title: '记录运动', name: '做了什么运动', placeholder: '例如：快走', amount: '消耗热量 (kcal)', amountPlaceholder: '136', emoji: '🏃', cls: 'walk', unit: 'kcal' },
+      weight: { title: '记录体重', name: '当前体重', placeholder: '例如：58.6', amount: '单位', amountPlaceholder: 'kg', emoji: '⚖️', cls: 'weight', unit: 'kg' }
+    };
+    function showToast(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200); }
+    function openModal(type) { activeModal = type; const c = configs[type]; modalTitle.textContent = c.title; nameLabel.textContent = c.name; nameInput.placeholder = c.placeholder; amountLabel.textContent = c.amount; amountInput.placeholder = c.amountPlaceholder; amountInput.type = type === 'weight' ? 'text' : 'number'; amountInput.value = ''; nameInput.value = ''; noteInput.value = ''; modalBackdrop.classList.add('show'); setTimeout(() => nameInput.focus(), 30); }
+    function closeModal() { modalBackdrop.classList.remove('show'); }
+    document.querySelectorAll('[data-modal]').forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.modal)));
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', e => { if (e.target === modalBackdrop) closeModal(); });
+    document.getElementById('recordForm').addEventListener('submit', e => {
+      e.preventDefault(); const c = configs[activeModal]; const name = nameInput.value.trim(); const amount = amountInput.value.trim(); if (!name || !amount) return;
+      if (activeModal === 'water') { water += Number(amount) || 0; document.getElementById('waterValue').innerHTML = `${water.toLocaleString()} <span>ml</span>`; }
+      if (activeModal === 'weight') { document.getElementById('weightValue').textContent = Number(amount).toFixed(1); }
+      const item = document.createElement('article'); item.className = 'log-item'; item.innerHTML = `<div class="log-dot ${c.cls}">${c.emoji}</div><div class="log-copy"><strong>${name}</strong><span>刚刚 · ${noteInput.value.trim() || '记录完成，继续保持'}</span></div><div class="log-cal">${amount} ${c.unit}</div>`; logList.prepend(item); closeModal(); showToast('记录成功，今天也在变轻 ✦');
+    });
+    document.querySelectorAll('[data-nav]').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('[data-nav]').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const labels = {home:'首页', diary:'手帐', trend:'趋势', mine:'我的'}; if (btn.dataset.nav !== 'home') showToast(`${labels[btn.dataset.nav]} 功能正在整理中`); }));
+    document.querySelectorAll('[data-action]').forEach(btn => btn.addEventListener('click', () => { const messages = {notify:'今天的提醒：记得补充水分哦', profile:'个人资料', allStats:'你的数据会每天变得更好', calorieDetail:'近 7 天热量趋势已更新', allLogs:'已展示全部记录'}; showToast(messages[btn.dataset.action]); }));
+  </script>
+</body>
+</html>

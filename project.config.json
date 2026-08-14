@@ -1,0 +1,41 @@
+{
+  "description": "这不得瘦死 - 轻盈生活记录小程序",
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "compileType": "miniprogram",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "enhance": true,
+    "showShadowRootInWxmlPanel": true,
+    "compileHotReLoad": true,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "simulatorType": "wechat",
+  "simulatorPluginLibVersion": {},
+  "appid": "wxc2a4e62855d86261",
+  "projectname": "zhebudeshousi",
+  "condition": {},
+  "editorSetting": {}
+}

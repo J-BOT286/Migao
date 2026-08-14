@@ -1,0 +1,15 @@
+.DS_Store
+
+# WeChat local/private settings
+project.private.config.json
+
+# Xcode user and build artifacts
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved

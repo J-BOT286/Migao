@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "这不得瘦死",
+    "navigationBarBackgroundColor": "#fff3f7",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#fff3f7",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

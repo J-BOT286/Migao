@@ -1,0 +1,4 @@
+{
+  "desc": "这不得瘦死小程序",
+  "rules": [{ "action": "allow", "page": "pages/index/index" }]
+}
