@@ -1,0 +1,234 @@
+import Foundation
+import SwiftUI
+
+enum AppTab: String, CaseIterable {
+    case home = "首页"
+    case trend = "趋势"
+    case mine = "我的"
+}
+
+enum RecordType: String, Codable, CaseIterable {
+    case meal, water, sport, weight
+
+    var title: String {
+        switch self {
+        case .meal: return "记录饮食"
+        case .water: return "记录饮水"
+        case .sport: return "记录运动"
+        case .weight: return "记录体重"
+        }
+    }
+
+    var nameLabel: String {
+        switch self {
+        case .meal: return "吃了什么"
+        case .water: return "饮品名称"
+        case .sport: return "运动项目"
+        case .weight: return "当前体重"
+        }
+    }
+
+    var namePlaceholder: String {
+        switch self {
+        case .meal: return "例如：鸡胸肉沙拉"
+        case .water: return "例如：温水"
+        case .sport: return "例如：快走"
+        case .weight: return ""
+        }
+    }
+
+    var amountLabel: String {
+        switch self {
+        case .meal: return "大约热量"
+        case .water: return "饮水量"
+        case .sport: return "运动时长"
+        case .weight: return "当前体重"
+        }
+    }
+
+    var amountPlaceholder: String {
+        switch self {
+        case .meal: return "420"
+        case .water: return "300"
+        case .sport: return "30"
+        case .weight: return ""
+        }
+    }
+
+    var unit: String {
+        switch self {
+        case .meal: return "kcal"
+        case .water: return "ml"
+        case .sport: return "分钟"
+        case .weight: return "kg"
+        }
+    }
+
+    var mascot: MascotKind {
+        switch self {
+        case .meal: return .berryBunny
+        case .water: return .puddingBear
+        case .sport: return .mintMochi
+        case .weight: return .cloudKitty
+        }
+    }
+}
+
+enum TrendPeriod: String, CaseIterable {
+    case week = "7天"
+    case month = "30天"
+    case quarter = "3个月"
+
+    var loss: Double {
+        switch self {
+        case .week: return 0.7
+        case .month: return 1.8
+        case .quarter: return 3.4
+        }
+    }
+}
+
+enum MascotKind {
+    case berryBunny, puddingBear, mintMochi, cloudKitty
+}
+
+struct ActivityLog: Identifiable, Codable {
+    var id = UUID()
+    var kind: RecordType
+    var title: String
+    var date: Date
+    var amount: String
+    var note: String
+}
+
+struct WeightRecord: Identifiable, Codable {
+    var id = UUID()
+    var date: Date
+    var weight: Double
+    var note: String
+    var change: Double
+}
+
+@MainActor
+final class AppState: ObservableObject {
+    @Published var weight: Double = 58.6
+    @Published var water: Int = 1200
+    @Published var records: [WeightRecord] = []
+    @Published var logs: [ActivityLog] = []
+
+    private let storageKey = "zhebudeshousi.appState"
+
+    init() {
+        let calendar = Calendar.current
+        let today = Date()
+        records = [
+            WeightRecord(date: today, weight: 58.6, note: "晨起空腹", change: -0.2),
+            WeightRecord(date: calendar.date(byAdding: .day, value: -1, to: today) ?? today, weight: 58.8, note: "晨起空腹", change: -0.1),
+            WeightRecord(date: calendar.date(byAdding: .day, value: -2, to: today) ?? today, weight: 58.9, note: "晨起空腹", change: -0.2),
+            WeightRecord(date: calendar.date(byAdding: .day, value: -3, to: today) ?? today, weight: 59.1, note: "晚餐后", change: -0.2)
+        ]
+        logs = [
+            ActivityLog(kind: .meal, title: "鸡胸肉沙拉", date: today, amount: "420 kcal", note: "午餐 · 12:18"),
+            ActivityLog(kind: .water, title: "补充水分", date: today, amount: "300 ml", note: "上午 · 10:35"),
+            ActivityLog(kind: .sport, title: "公园散步", date: today, amount: "32 分钟", note: "运动 · 09:10")
+        ]
+        load()
+    }
+
+    var goal: Double { 54.0 }
+    var startWeight: Double { 62.0 }
+    var goalProgress: Double {
+        min(1, max(0, (startWeight - weight) / (startWeight - goal)))
+    }
+
+    func weightTone(_ value: Double) -> Color {
+        let distance = value - goal
+        if distance <= 0 { return .mintGreen }
+        if distance < 1.5 { return Color(hex: "E5A173") }
+        if distance < 3 { return Color(hex: "EA927B") }
+        if distance < 4.5 { return Color(hex: "ED7E80") }
+        if distance < 6 { return Color(hex: "ED6E83") }
+        if distance < 8 { return Color(hex: "E65F7D") }
+        return Color(hex: "D94F70")
+    }
+
+    func addWeight(_ value: Double, note: String) {
+        let difference = value - weight
+        weight = value
+        records.insert(WeightRecord(date: .now, weight: value, note: note.isEmpty ? "刚刚记录" : note, change: difference), at: 0)
+        logs.insert(ActivityLog(kind: .weight, title: "体重记录", date: .now, amount: String(format: "%.1f kg", value), note: note.isEmpty ? timeLabel() : note), at: 0)
+        save()
+    }
+
+    func addActivity(type: RecordType, name: String, amount: String, note: String) {
+        let title = name.isEmpty ? type.title : name
+        let displayNote = note.isEmpty ? timeLabel() : note
+        logs.insert(ActivityLog(kind: type, title: title, date: .now, amount: "\(amount) \(type.unit)", note: displayNote), at: 0)
+        if type == .water, let value = Int(amount) { water += value }
+        save()
+    }
+
+    private func timeLabel() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: .now) + " · 刚刚"
+    }
+
+    private struct Snapshot: Codable {
+        var weight: Double
+        var water: Int
+        var records: [WeightRecord]
+        var logs: [ActivityLog]
+    }
+
+    private func save() {
+        let snapshot = Snapshot(weight: weight, water: water, records: records, logs: logs)
+        guard let data = try? JSONEncoder().encode(snapshot) else { return }
+        UserDefaults.standard.set(data, forKey: storageKey)
+    }
+
+    private func load() {
+        guard let data = UserDefaults.standard.data(forKey: storageKey),
+              let snapshot = try? JSONDecoder().decode(Snapshot.self, from: data) else { return }
+        weight = snapshot.weight
+        water = snapshot.water
+        records = snapshot.records
+        logs = snapshot.logs
+    }
+}
+
+extension Color {
+    static let pagePink = Color(hex: "FFF6F9")
+    static let panelPink = Color(hex: "FFE0EA")
+    static let strawberry = Color(hex: "EF6F9F")
+    static let softPink = Color(hex: "F6D7E4")
+    static let warmText = Color(hex: "604756")
+    static let mutedText = Color(hex: "A58B98")
+    static let mintGreen = Color(hex: "67AF97")
+    static let mintPale = Color(hex: "DCF3F0")
+    static let lavenderPale = Color(hex: "E8E0FA")
+
+    init(hex: String) {
+        let value = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var number: UInt64 = 0
+        Scanner(string: value).scanHexInt64(&number)
+        let red = Double((number >> 16) & 0xff) / 255
+        let green = Double((number >> 8) & 0xff) / 255
+        let blue = Double(number & 0xff) / 255
+        self.init(red: red, green: green, blue: blue)
+    }
+}
+
+extension View {
+    func kawaiiCard(radius: CGFloat = 25) -> some View {
+        self
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).stroke(Color.white.opacity(0.95), lineWidth: 2))
+            .shadow(color: Color(hex: "EFCFDC").opacity(0.65), radius: 0, x: 0, y: 7)
+    }
+
+    func roundedFont(_ size: CGFloat, weight: Font.Weight = .regular) -> some View {
+        self.font(.system(size: size, weight: weight, design: .rounded))
+    }
+}
