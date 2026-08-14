@@ -1,8 +1,12 @@
 import SwiftUI
+
+#if os(iOS)
 import UIKit
+#endif
 
 struct ContentView: View {
     @EnvironmentObject private var state: AppState
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var tab: AppTab = .home
     @State private var recordType: RecordType?
 
@@ -21,7 +25,7 @@ struct ContentView: View {
                     ProfileView(state: state)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(maxWidth: usesWideLayout ? 720 : .infinity, maxHeight: .infinity, alignment: .top)
 
             BottomNav(selected: $tab)
 
@@ -38,6 +42,14 @@ struct ContentView: View {
         }
         .preferredColorScheme(.light)
         .animation(.spring(response: 0.32, dampingFraction: 0.86), value: recordType != nil)
+    }
+
+    private var usesWideLayout: Bool {
+        #if os(macOS)
+        return true
+        #else
+        return horizontalSizeClass == .regular
+        #endif
     }
 
     private func present(_ type: RecordType) {
@@ -71,6 +83,7 @@ private struct HomeView: View {
             .padding(.horizontal, 20)
             .padding(.top, 8)
             .padding(.bottom, 120)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -233,6 +246,7 @@ private struct DailyPanel: View {
         }
         .padding(18)
         .kawaiiCard(radius: 24)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -322,6 +336,7 @@ private struct ActivityList: View {
         }
         .padding(.horizontal, 18)
         .kawaiiCard(radius: 24)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func icon(for kind: RecordType) -> String { switch kind { case .meal: return "fork.knife"; case .water: return "drop.fill"; case .sport: return "figure.walk"; case .weight: return "scalemass.fill" } }
@@ -398,6 +413,7 @@ private struct TrendView: View {
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 120)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -518,7 +534,10 @@ private struct ProfileView: View {
                 .padding(.top, 35).padding(.horizontal, 20).padding(.bottom, 20).kawaiiCard(radius: 24)
                 VStack(spacing: 0) { SettingRow(title: "目标设置", icon: "flag.fill"); Divider(); SettingRow(title: "记录提醒", icon: "bell.fill"); Divider(); SettingRow(title: "关于这不得瘦死", icon: "heart.fill") }
                     .padding(.horizontal, 18).kawaiiCard(radius: 24).padding(.top, 18)
-            }.padding(.horizontal, 20).padding(.bottom, 120)
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 120)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -530,7 +549,10 @@ private struct BottomNav: View {
     @Binding var selected: AppTab
     var body: some View {
         HStack(spacing: 0) { ForEach(AppTab.allCases, id: \.self) { tab in Button { selected = tab } label: { VStack(spacing: 5) { Image(systemName: icon(for: tab)).font(.system(size: 17, weight: .bold)); Text(tab.rawValue).roundedFont(10, weight: selected == tab ? .bold : .medium) }.foregroundStyle(selected == tab ? Color(hex: "E45F8E") : Color(hex: "B49CA8")).frame(maxWidth: .infinity).frame(height: 57) }.buttonStyle(.plain) } }
-            .padding(.horizontal, 44).padding(.top, 9).padding(.bottom, 3).background(.white.opacity(0.96)).overlay(alignment: .top) { Rectangle().fill(Color(hex: "F4D7E3")).frame(height: 1) }.shadow(color: Color(hex: "DA8BA9").opacity(0.11), radius: 18, y: -7)
+            .frame(maxWidth: 560)
+            .padding(.horizontal, 44).padding(.top, 9).padding(.bottom, 3)
+            .frame(maxWidth: .infinity)
+            .background(.white.opacity(0.96)).overlay(alignment: .top) { Rectangle().fill(Color(hex: "F4D7E3")).frame(height: 1) }.shadow(color: Color(hex: "DA8BA9").opacity(0.11), radius: 18, y: -7)
     }
     private func icon(for tab: AppTab) -> String { switch tab { case .home: return "house.fill"; case .trend: return "chart.xyaxis.line"; case .mine: return "person.fill" } }
 }
@@ -614,17 +636,61 @@ private struct WeightWheel: View {
     @Binding var decimal: Int
     var body: some View {
         VStack(spacing: 6) {
-            Text("滑动选择今天的体重").roundedFont(13, weight: .bold).foregroundStyle(Color(hex: "836777")).frame(maxWidth: .infinity)
-            HStack(spacing: 0) {
-                Picker("整数", selection: $whole) { ForEach(20...300, id: \.self) { Text("\($0)").tag($0) } }.labelsHidden().pickerStyle(.wheel).frame(width: 115, height: 170).clipped()
-                Picker("小数", selection: $decimal) { ForEach(0..<10, id: \.self) { Text(".\($0)").tag($0) } }.labelsHidden().pickerStyle(.wheel).frame(width: 82, height: 170).clipped()
-                Text("kg").roundedFont(13, weight: .heavy).foregroundStyle(Color(hex: "D76691")).padding(.leading, 4)
-            }
-            .tint(Color(hex: "DF5F8D"))
+            Text(instructionText)
+                .roundedFont(13, weight: .bold)
+                .foregroundStyle(Color(hex: "836777"))
+                .frame(maxWidth: .infinity)
+            pickerContainer
             .overlay { RoundedRectangle(cornerRadius: 15, style: .continuous).stroke(Color(hex: "F28AB0"), lineWidth: 1.5).frame(height: 55).allowsHitTesting(false) }
             Text("精确到 0.1 kg").roundedFont(10).foregroundStyle(Color.mutedText)
         }
         .padding(.top, 22)
+    }
+
+    private var instructionText: String {
+        #if os(iOS)
+        return "滑动选择今天的体重"
+        #else
+        return "选择今天的体重"
+        #endif
+    }
+
+    @ViewBuilder
+    private var pickerContainer: some View {
+        #if os(iOS)
+        HStack(spacing: 0) {
+            Picker("整数", selection: $whole) {
+                ForEach(20...300, id: \.self) { Text("\($0)").tag($0) }
+            }
+            .labelsHidden()
+            .pickerStyle(.wheel)
+            .frame(width: 115, height: 170)
+            .clipped()
+            .tint(Color(hex: "DF5F8D"))
+            Picker("小数", selection: $decimal) {
+                ForEach(0..<10, id: \.self) { Text(".\($0)").tag($0) }
+            }
+            .labelsHidden()
+            .pickerStyle(.wheel)
+            .frame(width: 82, height: 170)
+            .clipped()
+            .tint(Color(hex: "DF5F8D"))
+            Text("kg").roundedFont(13, weight: .heavy).foregroundStyle(Color(hex: "D76691")).padding(.leading, 4)
+        }
+        #else
+        HStack(spacing: 8) {
+            Picker("整数", selection: $whole) {
+                ForEach(20...300, id: \.self) { Text("\($0)").tag($0) }
+            }
+            .pickerStyle(.menu)
+            Picker("小数", selection: $decimal) {
+                ForEach(0..<10, id: \.self) { Text(".\($0)").tag($0) }
+            }
+            .pickerStyle(.menu)
+            Text("kg").roundedFont(13, weight: .heavy).foregroundStyle(Color(hex: "D76691"))
+        }
+        .frame(maxWidth: .infinity, minHeight: 55)
+        #endif
     }
 }
 
@@ -632,8 +698,44 @@ private struct ModalField: View {
     let label: String
     let placeholder: String
     @Binding var text: String
-    var keyboard: UIKeyboardType = .default
+    var keyboard: ModalKeyboard = .default
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) { Text(label).roundedFont(11, weight: .bold).foregroundStyle(Color(hex: "816877")); TextField(placeholder, text: $text).keyboardType(keyboard).roundedFont(13).foregroundStyle(Color.warmText).padding(.horizontal, 14).frame(height: 45).background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous)).overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color(hex: "F5DBE5"), lineWidth: 1.5)) }
+        VStack(alignment: .leading, spacing: 7) {
+            Text(label).roundedFont(11, weight: .bold).foregroundStyle(Color(hex: "816877"))
+            inputField
+                .roundedFont(13)
+                .foregroundStyle(Color.warmText)
+                .padding(.horizontal, 14)
+                .frame(height: 45)
+                .background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color(hex: "F5DBE5"), lineWidth: 1.5))
+        }
+    }
+
+    @ViewBuilder
+    private var inputField: some View {
+        #if os(iOS)
+        TextField(placeholder, text: $text)
+            .keyboardType(keyboard.uiType)
+        #else
+        TextField(placeholder, text: $text)
+        #endif
     }
 }
+
+private enum ModalKeyboard {
+    case `default`
+    case decimalPad
+}
+
+#if os(iOS)
+private extension ModalKeyboard {
+    var uiType: UIKeyboardType {
+        switch self {
+        case .default: return .default
+        case .decimalPad: return .decimalPad
+        }
+    }
+}
+#endif

@@ -9,5 +9,9 @@ struct ZheBuDeShouSiApp: App {
             ContentView()
                 .environmentObject(appState)
         }
+        #if os(macOS)
+        .windowResizability(.contentSize)
+        .defaultSize(width: 520, height: 860)
+        #endif
     }
 }
