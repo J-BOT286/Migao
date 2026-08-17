@@ -68,24 +68,336 @@ private struct HomeView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
-                AppHeader(eyebrow: "DAY 18 · 轻盈打卡中", title: "今天也要可爱地变轻呀", mascot: .berryBunny)
+                HomeHeader(recordCount: state.records.count)
                 WeightHero(state: state, onRecord: { onRecord(.weight) })
 
-                SectionHeader(title: "今天怎么样", subtitle: "不用满分，开心坚持就好", sticker: "GOOD")
+                HomeSectionTitle(title: "今日状态", subtitle: "慢慢来，也是在向前")
                 DailyPanel(water: state.water)
 
-                SectionHeader(title: "和小伙伴一起记录", subtitle: nil, rule: true)
+                HomeSectionTitle(title: "快捷记录", subtitle: "把今天的每一点努力收好")
                 QuickRecordPanel(onRecord: onRecord)
 
-                SectionHeader(title: "今天的小小成就", subtitle: "已经收集 \(state.logs.count) 枚努力贴纸", sticker: "NICE")
+                HomeSectionTitle(title: "最近记录", subtitle: "今天已留下 \(state.logs.count) 条记录")
                 ActivityList(logs: state.logs)
             }
             .padding(.horizontal, 20)
-            .padding(.top, 8)
+            .padding(.top, 12)
             .padding(.bottom, 120)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
+}
+
+private struct HomeHeader: View {
+    let recordCount: Int
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("这不得瘦死")
+                    .roundedFont(25, weight: .heavy)
+                    .foregroundStyle(Color(hex: "4F3B46"))
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color(hex: "F279A2"))
+                        .frame(width: 5, height: 5)
+                    Text("已认真记录 \(recordCount) 天")
+                        .roundedFont(11, weight: .medium)
+                        .foregroundStyle(Color(hex: "A48694"))
+                }
+            }
+            Spacer(minLength: 8)
+            ZStack(alignment: .bottomTrailing) {
+                Circle()
+                    .fill(Color(hex: "FFE2EC"))
+                    .frame(width: 52, height: 52)
+                KawaiiMascot(kind: .berryBunny, size: 38)
+                    .offset(y: 1)
+                Circle()
+                    .fill(Color(hex: "72B7A8"))
+                    .frame(width: 13, height: 13)
+                    .overlay(Circle().stroke(.white, lineWidth: 2))
+            }
+        }
+        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 72, alignment: .center)
+    }
+}
+
+private struct WeightHero: View {
+    @ObservedObject var state: AppState
+    let onRecord: () -> Void
+
+    var body: some View {
+        let remaining = max(0, state.weight - state.goal)
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .center) {
+                    HStack(spacing: 7) {
+                        Image(systemName: "scalemass.fill")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(Color(hex: "E2608E"))
+                        Text("今日体重")
+                            .roundedFont(13, weight: .bold)
+                            .foregroundStyle(Color(hex: "765766"))
+                    }
+                    Spacer()
+                    Text("目标 \(String(format: "%.1f", state.goal)) kg")
+                        .roundedFont(10, weight: .bold)
+                        .foregroundStyle(Color(hex: "8D7180"))
+                        .padding(.horizontal, 10)
+                        .frame(height: 29)
+                        .background(Color(hex: "FFF1F6"), in: Capsule())
+                }
+
+                HStack(alignment: .lastTextBaseline, spacing: 8) {
+                    Text(String(format: "%.1f", state.weight))
+                        .roundedFont(60, weight: .heavy)
+                        .foregroundStyle(state.weightTone(state.weight))
+                    Text("kg")
+                        .roundedFont(14, weight: .bold)
+                        .foregroundStyle(Color(hex: "9A7A89"))
+                    Spacer(minLength: 6)
+                    WeightChangeBadge(change: state.records.first?.change ?? 0)
+                }
+                .padding(.top, 13)
+
+                HStack {
+                    Text("距离目标还有 \(String(format: "%.1f", remaining)) kg")
+                    Spacer()
+                    Text("已完成 \(Int(state.goalProgress * 100))%")
+                }
+                .roundedFont(10, weight: .medium)
+                .foregroundStyle(Color(hex: "9A7B89"))
+
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color(hex: "F7E5EC"))
+                        Capsule()
+                            .fill(Color(hex: "ED7DA4"))
+                            .frame(width: max(7, proxy.size.width * state.goalProgress))
+                    }
+                }
+                .frame(height: 7)
+                .padding(.top, 11)
+
+                HStack {
+                    Text("起点 \(String(format: "%.1f", state.startWeight))")
+                    Spacer()
+                    Text("终点 \(String(format: "%.1f", state.goal))")
+                }
+                .roundedFont(9, weight: .medium)
+                .foregroundStyle(Color(hex: "B094A1"))
+                .padding(.top, 7)
+            }
+            .padding(20)
+
+            Button(action: onRecord) {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 13, weight: .heavy))
+                    Text("记录今天的体重")
+                        .roundedFont(13, weight: .bold)
+                }
+                .foregroundStyle(Color(hex: "D95080"))
+                .frame(maxWidth: .infinity)
+                .frame(height: 49)
+                .background(Color(hex: "FFF0F5"))
+            }
+            .buttonStyle(.plain)
+        }
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color(hex: "F4DCE6"), lineWidth: 1))
+        .shadow(color: Color(hex: "B86C88").opacity(0.10), radius: 18, y: 8)
+    }
+}
+
+private struct WeightChangeBadge: View {
+    let change: Double
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: change <= 0 ? "arrow.down.right" : "arrow.up.right")
+                .font(.system(size: 9, weight: .heavy))
+            Text(abs(change) < 0.05 ? "持平" : String(format: "%+.1f", change))
+                .roundedFont(10, weight: .heavy)
+        }
+        .foregroundStyle(change <= 0 ? Color(hex: "4F9E8F") : Color(hex: "D45A73"))
+        .padding(.horizontal, 9)
+        .frame(height: 28)
+        .background(change <= 0 ? Color(hex: "E4F3EF") : Color(hex: "FCE8ED"), in: Capsule())
+    }
+}
+
+private struct HomeSectionTitle: View {
+    let title: String
+    let subtitle: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .roundedFont(17, weight: .heavy)
+                .foregroundStyle(Color(hex: "55414B"))
+            if let subtitle {
+                Text(subtitle)
+                    .roundedFont(10, weight: .medium)
+                    .foregroundStyle(Color(hex: "A58B98"))
+            }
+        }
+        .padding(.top, 28)
+        .padding(.bottom, 12)
+    }
+}
+
+private struct DailyPanel: View {
+    let water: Int
+
+    var body: some View {
+        HStack(spacing: 0) {
+            MetricCell(icon: "flame.fill", color: Color(hex: "EA7A76"), tint: Color(hex: "FDEBE8"), value: "1280", unit: "kcal", label: "今日摄入")
+            MetricDivider()
+            MetricCell(icon: "drop.fill", color: Color(hex: "55A89C"), tint: Color(hex: "E2F3EF"), value: "\(water)", unit: "ml", label: "今日饮水")
+            MetricDivider()
+            MetricCell(icon: "figure.walk", color: Color(hex: "8D73C8"), tint: Color(hex: "EEE9F8"), value: "6842", unit: "步", label: "今日步数")
+        }
+        .padding(.vertical, 18)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color(hex: "F2E2E8"), lineWidth: 1))
+    }
+}
+
+private struct MetricCell: View {
+    let icon: String
+    let color: Color
+    let tint: Color
+    let value: String
+    let unit: String
+    let label: String
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(color)
+                .frame(width: 30, height: 30)
+                .background(tint, in: Circle())
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text(value).roundedFont(14, weight: .heavy).foregroundStyle(Color(hex: "5A444F"))
+                Text(unit).roundedFont(8, weight: .medium).foregroundStyle(Color(hex: "A58B98"))
+            }
+            Text(label).roundedFont(9, weight: .medium).foregroundStyle(Color(hex: "9E8591"))
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct MetricDivider: View {
+    var body: some View {
+        Rectangle()
+            .fill(Color(hex: "F0E3E8"))
+            .frame(width: 1, height: 66)
+    }
+}
+
+private struct QuickRecordPanel: View {
+    let onRecord: (RecordType) -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            QuickAction(type: .meal, label: "饮食", icon: "fork.knife", onTap: onRecord)
+            QuickAction(type: .water, label: "喝水", icon: "drop.fill", onTap: onRecord)
+            QuickAction(type: .sport, label: "运动", icon: "figure.walk", onTap: onRecord)
+            QuickAction(type: .weight, label: "体重", icon: "scalemass.fill", onTap: onRecord)
+        }
+        .padding(.vertical, 16)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color(hex: "F2E2E8"), lineWidth: 1))
+    }
+}
+
+private struct QuickAction: View {
+    let type: RecordType
+    let label: String
+    let icon: String
+    let onTap: (RecordType) -> Void
+
+    var body: some View {
+        Button { onTap(type) } label: {
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(iconColor)
+                    .frame(width: 42, height: 42)
+                    .background(tint, in: Circle())
+                Text(label)
+                    .roundedFont(10, weight: .bold)
+                    .foregroundStyle(Color(hex: "755B68"))
+            }
+            .frame(maxWidth: .infinity, minHeight: 69)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var tint: Color {
+        switch type {
+        case .meal: return Color(hex: "FDE7ED")
+        case .water: return Color(hex: "E2F3EF")
+        case .sport: return Color(hex: "FCEAE5")
+        case .weight: return Color(hex: "EEE9F8")
+        }
+    }
+
+    private var iconColor: Color {
+        switch type {
+        case .meal: return Color(hex: "DF668C")
+        case .water: return Color(hex: "55A89C")
+        case .sport: return Color(hex: "E27B6F")
+        case .weight: return Color(hex: "8D73C8")
+        }
+    }
+}
+
+private struct ActivityList: View {
+    let logs: [ActivityLog]
+
+    var body: some View {
+        let visibleLogs = Array(logs.prefix(5))
+        VStack(spacing: 0) {
+            ForEach(Array(visibleLogs.enumerated()), id: \.element.id) { index, log in
+                HStack(spacing: 13) {
+                    Image(systemName: icon(for: log.kind))
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(iconColor(for: log.kind))
+                        .frame(width: 38, height: 38)
+                        .background(iconBackground(for: log.kind), in: Circle())
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(log.title).roundedFont(12, weight: .bold).foregroundStyle(Color.warmText).lineLimit(1)
+                        Text(log.note).roundedFont(10).foregroundStyle(Color.mutedText)
+                    }
+                    Spacer()
+                    Text(log.amount).roundedFont(10, weight: .bold).foregroundStyle(Color(hex: "8D7280"))
+                }
+                .padding(.vertical, 13)
+                if index < visibleLogs.count - 1 {
+                    Rectangle().fill(Color(hex: "F2E5EA")).frame(height: 1).padding(.leading, 51)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color(hex: "F2E2E8"), lineWidth: 1))
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func icon(for kind: RecordType) -> String { switch kind { case .meal: return "fork.knife"; case .water: return "drop.fill"; case .sport: return "figure.walk"; case .weight: return "scalemass.fill" } }
+    private func iconColor(for kind: RecordType) -> Color { switch kind { case .meal: return .strawberry; case .water: return Color(hex: "66B7AE"); case .sport: return Color(hex: "8AB56B"); case .weight: return Color(hex: "9380CE") } }
+    private func iconBackground(for kind: RecordType) -> Color { switch kind { case .meal: return .panelPink; case .water: return .mintPale; case .sport: return Color(hex: "E7F2D9"); case .weight: return .lavenderPale } }
 }
 
 private struct AppHeader: View {
@@ -111,81 +423,6 @@ private struct AppHeader: View {
             .buttonStyle(.plain)
         }
         .padding(.vertical, 18)
-    }
-}
-
-private struct WeightHero: View {
-    @ObservedObject var state: AppState
-    let onRecord: () -> Void
-
-    var body: some View {
-        let remaining = max(0, state.weight - state.goal)
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("TODAY'S WEIGHT").roundedFont(10, weight: .heavy).tracking(1).foregroundStyle(Color(hex: "D8749B"))
-                    Text("今天的体重").roundedFont(16, weight: .bold).foregroundStyle(Color(hex: "79596A"))
-                }
-                Spacer()
-                Text("较上周 -0.7 kg").roundedFont(11, weight: .bold).foregroundStyle(Color(hex: "D76291"))
-                    .padding(.horizontal, 11).padding(.vertical, 8)
-                    .background(.white.opacity(0.74), in: Capsule())
-            }
-
-            HStack(alignment: .lastTextBaseline, spacing: 7) {
-                Text(String(format: "%.1f", state.weight)).roundedFont(68, weight: .heavy).foregroundStyle(state.weightTone(state.weight))
-                Text("kg").roundedFont(16, weight: .bold).foregroundStyle(Color(hex: "A27289"))
-            }
-            .padding(.top, 15)
-
-            HStack {
-                Text("距离目标还有 \(String(format: "%.1f", remaining)) kg")
-                Spacer()
-                Text("\(Int(state.goalProgress * 100))%")
-            }
-            .roundedFont(11, weight: .medium).foregroundStyle(Color(hex: "956F82"))
-
-            GeometryReader { proxy in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(.white.opacity(0.55))
-                    Capsule().fill(LinearGradient(colors: [Color(hex: "FF91B7"), Color(hex: "FFB989")], startPoint: .leading, endPoint: .trailing))
-                        .frame(width: proxy.size.width * state.goalProgress)
-                }
-            }
-            .frame(height: 7)
-            .padding(.vertical, 12)
-
-            HStack {
-                Text("开始 62.0")
-                Spacer()
-                Text("目标 54.0")
-            }
-            .roundedFont(10, weight: .medium).foregroundStyle(Color(hex: "AC8296"))
-
-            Button(action: onRecord) {
-                HStack(spacing: 6) {
-                    Text("+").roundedFont(21, weight: .medium)
-                    Text("记录今天的体重").roundedFont(14, weight: .bold)
-                }
-                .foregroundStyle(Color(hex: "D65386"))
-                .frame(maxWidth: .infinity)
-                .frame(height: 51)
-                .background(.white.opacity(0.58))
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, -20)
-            .padding(.bottom, -20)
-            .padding(.top, 20)
-        }
-        .padding(20)
-        .background(
-            LinearGradient(colors: [Color(hex: "FFE0EA"), Color(hex: "FFF0DF"), Color(hex: "E8DCFF")], startPoint: .topLeading, endPoint: .bottomTrailing)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 27, style: .continuous))
-        .overlay(alignment: .topTrailing) {
-            Text("✦").roundedFont(24, weight: .bold).foregroundStyle(.white.opacity(0.92)).padding(.top, 20).padding(.trailing, 24)
-        }
-        .shadow(color: Color(hex: "EABFD1").opacity(0.75), radius: 0, x: 0, y: 8)
     }
 }
 
@@ -215,133 +452,6 @@ private struct SectionHeader: View {
         .padding(.top, 37)
         .padding(.bottom, 16)
     }
-}
-
-private struct DailyPanel: View {
-    let water: Int
-
-    var body: some View {
-        HStack(spacing: 17) {
-            VStack(spacing: 9) {
-                ZStack {
-                    Circle().stroke(Color(hex: "F7E6ED"), lineWidth: 10)
-                    Circle().trim(from: 0, to: 0.78).stroke(Color(hex: "FF87AE"), style: StrokeStyle(lineWidth: 10, lineCap: .round)).rotationEffect(.degrees(-90))
-                    VStack(spacing: 3) {
-                        Text("1280").roundedFont(21, weight: .heavy).foregroundStyle(Color.warmText)
-                        Text("千卡").roundedFont(10).foregroundStyle(Color.mutedText)
-                    }
-                }
-                .frame(width: 94, height: 94)
-                Text("目标 1650 千卡").roundedFont(10).foregroundStyle(Color.mutedText)
-            }
-            .frame(width: 122)
-
-            Rectangle().fill(Color(hex: "F3DCE5")).frame(width: 1, height: 126)
-
-            VStack(spacing: 0) {
-                MetricRow(icon: "drop.fill", tint: .mintPale, iconColor: Color(hex: "66B7AE"), label: "饮水", value: "\(water)", unit: "ml", progress: "60%")
-                Rectangle().fill(Color(hex: "F7E8EE")).frame(height: 1).padding(.leading, 41)
-                MetricRow(icon: "figure.walk", tint: Color(hex: "FFE4D9"), iconColor: Color(hex: "EB8C76"), label: "步数", value: "6842", unit: "步", progress: "68%")
-            }
-        }
-        .padding(18)
-        .kawaiiCard(radius: 24)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-private struct MetricRow: View {
-    let icon: String
-    let tint: Color
-    let iconColor: Color
-    let label: String
-    let value: String
-    let unit: String
-    let progress: String
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon).font(.system(size: 16, weight: .bold)).foregroundStyle(iconColor)
-                .frame(width: 39, height: 39).background(tint, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-            VStack(alignment: .leading, spacing: 3) {
-                Text(label).roundedFont(10).foregroundStyle(Color.mutedText)
-                HStack(alignment: .lastTextBaseline, spacing: 3) { Text(value).roundedFont(16, weight: .heavy).foregroundStyle(Color.warmText); Text(unit).roundedFont(9).foregroundStyle(Color.mutedText) }
-            }
-            Spacer()
-            Text(progress).roundedFont(11, weight: .heavy).foregroundStyle(iconColor)
-        }
-        .frame(height: 62)
-    }
-}
-
-private struct QuickRecordPanel: View {
-    let onRecord: (RecordType) -> Void
-
-    var body: some View {
-        HStack(spacing: 0) {
-            QuickAction(type: .meal, label: "莓莓兔 · 饮食", onTap: onRecord)
-            Divider()
-            QuickAction(type: .water, label: "布丁熊 · 喝水", onTap: onRecord)
-            Divider()
-            QuickAction(type: .sport, label: "薄荷团 · 运动", onTap: onRecord)
-            Divider()
-            QuickAction(type: .weight, label: "云朵猫 · 体重", onTap: onRecord)
-        }
-        .padding(.vertical, 14)
-        .kawaiiCard(radius: 24)
-    }
-}
-
-private struct QuickAction: View {
-    let type: RecordType
-    let label: String
-    let onTap: (RecordType) -> Void
-
-    var body: some View {
-        Button { onTap(type) } label: {
-            VStack(spacing: 10) {
-                KawaiiMascot(kind: type.mascot, size: 32).frame(width: 50, height: 50).background(tint, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
-                Text(label).roundedFont(10, weight: .bold).foregroundStyle(Color(hex: "785C6C")).lineLimit(1).minimumScaleFactor(0.7)
-            }
-            .frame(maxWidth: .infinity, minHeight: 93)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var tint: Color {
-        switch type { case .meal: return .panelPink; case .water: return .mintPale; case .sport: return Color(hex: "E7F2D9"); case .weight: return .lavenderPale }
-    }
-}
-
-private struct ActivityList: View {
-    let logs: [ActivityLog]
-
-    var body: some View {
-        let visibleLogs = Array(logs.prefix(5))
-        VStack(spacing: 0) {
-            ForEach(Array(visibleLogs.enumerated()), id: \.element.id) { index, log in
-                HStack(spacing: 13) {
-                    Image(systemName: icon(for: log.kind)).font(.system(size: 15, weight: .bold)).foregroundStyle(iconColor(for: log.kind))
-                        .frame(width: 38, height: 38).background(iconBackground(for: log.kind), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(log.title).roundedFont(13, weight: .heavy).foregroundStyle(Color.warmText).lineLimit(1)
-                        Text(log.note).roundedFont(10).foregroundStyle(Color.mutedText)
-                    }
-                    Spacer()
-                    Text(log.amount).roundedFont(11, weight: .bold).foregroundStyle(Color(hex: "967487"))
-                }
-                .padding(.vertical, 14)
-                if index < visibleLogs.count - 1 { Rectangle().fill(Color(hex: "F3E1E9")).frame(height: 1) }
-            }
-        }
-        .padding(.horizontal, 18)
-        .kawaiiCard(radius: 24)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func icon(for kind: RecordType) -> String { switch kind { case .meal: return "fork.knife"; case .water: return "drop.fill"; case .sport: return "figure.walk"; case .weight: return "scalemass.fill" } }
-    private func iconColor(for kind: RecordType) -> Color { switch kind { case .meal: return .strawberry; case .water: return Color(hex: "66B7AE"); case .sport: return Color(hex: "8AB56B"); case .weight: return Color(hex: "9380CE") } }
-    private func iconBackground(for kind: RecordType) -> Color { switch kind { case .meal: return .panelPink; case .water: return .mintPale; case .sport: return Color(hex: "E7F2D9"); case .weight: return .lavenderPale } }
 }
 
 private struct TrendView: View {
